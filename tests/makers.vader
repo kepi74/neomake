@@ -117,8 +117,8 @@ Execute (Makers: get_entries_for_output):
     \ 'type': 'E',
     \ }]
 
-  Save g:neomake_test_maker_get_entries
-  function! g:neomake_test_maker_get_entries(context) abort
+  Save Neomake_test_maker_get_entries
+  function! Neomake_test_maker_get_entries(context) abort
     return g:neomake_test_entries
   endfunction
 
@@ -126,7 +126,7 @@ Execute (Makers: get_entries_for_output):
   \ 'exe': 'printf',
   \ 'args': ['foo'],
   \ 'append_file': 0,
-  \ 'get_entries_for_output': function('g:neomake_test_maker_get_entries')}
+  \ 'get_entries_for_output': function('Neomake_test_maker_get_entries')}
 
   call neomake#Make(1, [maker])
   NeomakeTestsWaitForFinishedJobs
