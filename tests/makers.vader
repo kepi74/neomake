@@ -102,3 +102,38 @@ Execute (neomake#GetEnabledMakers without filetype):
   \ [['mymaker', 0]]
 
   AssertEqual len(g:neomake_test_messages), 0
+
+Execute (Makers: get_entries_for_output):
+  Save g:neomake_test_entries
+  let g:neomake_test_entries = [{
+    \ 'bufnr': bufnr('%'),
+    \ 'filename': 'not_used_with_valid_bufnr',
+    \ 'lnum': 23,
+    \ 'pattern': '',
+    \ 'col': 42,
+    \ 'vcol': 0,
+    \ 'nr': 4711,
+    \ 'text': 'error message',
+    \ 'type': 'E',
+    \ }]
+
+  function! s:get_entries(context) abort
+    return g:neomake_test_entries
+  endfunction
+
+  let maker = {
+  \ 'exe': 'printf',
+  \ 'args': ['foo'],
+  \ 'append_file': 0,
+  \ 'get_entries_for_output': function('s:get_entries')}
+
+  call neomake#Make(1, [maker])
+  NeomakeTestsWaitForFinishedJobs
+
+  " valid=1 gets added
+  let expected = map(copy(g:neomake_test_entries), "extend(v:val, {'valid': 1})")
+  " filename is removed
+  let expected = map(expected, "filter(v:val, 'v:key != \"filename\"')")
+  AssertEqual getloclist(0), g:neomake_test_entries
+
+  AssertNeomakeMessage 'Skipping User autocmd NeomakeCountsChanged: no hooks.'

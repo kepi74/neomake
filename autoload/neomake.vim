@@ -897,41 +897,53 @@ function! s:ProcessJobOutput(jobinfo, lines, source) abort
                 \ '%s: processing %d lines of output.',
                 \ maker.name, len(a:lines)), a:jobinfo)
 
-    if has_key(maker, 'mapexpr')
-        let l:neomake_bufname = bufname(a:jobinfo.bufnr)
-        " @vimlint(EVL102, 1, l:neomake_bufdir)
-        let l:neomake_bufdir = fnamemodify(neomake_bufname, ':h')
-        " @vimlint(EVL102, 1, l:neomake_output_source)
-        let l:neomake_output_source = a:source
-        call map(a:lines, maker.mapexpr)
-    endif
-
     call s:init_job_output(a:jobinfo)
 
-    let olderrformat = &errorformat
-    let &errorformat = maker.errorformat
-    try
+    let prev_list = file_mode ? getloclist(0) : getqflist()
+    if has_key(maker, 'get_entries_for_output')
+        let entries = call(maker.get_entries_for_output, [{
+                    \ 'output': a:lines,
+                    \ 'source': a:source,
+                    \ 'jobinfo': a:jobinfo}])
         if file_mode
-            let prev_list = getloclist(0)
-            laddexpr a:lines
+            call setloclist(0, entries, 'a')
         else
-            let prev_list = getqflist()
-            caddexpr a:lines
+            call setqflist(entries, 'a')
         endif
-        let counts_changed = s:AddExprCallback(a:jobinfo, len(prev_list))
-        if !counts_changed
-            let counts_changed = (file_mode && getloclist(0) != prev_list)
-                        \ || (!file_mode && getqflist() != prev_list)
+    else
+        if has_key(maker, 'mapexpr')
+            let l:neomake_bufname = bufname(a:jobinfo.bufnr)
+            " @vimlint(EVL102, 1, l:neomake_bufdir)
+            let l:neomake_bufdir = fnamemodify(neomake_bufname, ':h')
+            " @vimlint(EVL102, 1, l:neomake_output_source)
+            let l:neomake_output_source = a:source
+            call map(a:lines, maker.mapexpr)
         endif
-        if counts_changed
-            call neomake#utils#hook('NeomakeCountsChanged', {
-                        \ 'file_mode': file_mode,
-                        \ 'bufnr': a:jobinfo.bufnr,
-                        \ }, a:jobinfo)
-        endif
-    finally
-        let &errorformat = olderrformat
-    endtry
+
+        let olderrformat = &errorformat
+        let &errorformat = maker.errorformat
+        try
+            if file_mode
+                laddexpr a:lines
+            else
+                caddexpr a:lines
+            endif
+        finally
+            let &errorformat = olderrformat
+        endtry
+    endif
+
+    let counts_changed = s:AddExprCallback(a:jobinfo, len(prev_list))
+    if !counts_changed
+        let counts_changed = (file_mode && getloclist(0) != prev_list)
+                    \ || (!file_mode && getqflist() != prev_list)
+    endif
+    if counts_changed
+        call neomake#utils#hook('NeomakeCountsChanged', {
+                    \ 'file_mode': file_mode,
+                    \ 'bufnr': a:jobinfo.bufnr,
+                    \ }, a:jobinfo)
+    endif
 
     call s:HandleLoclistQflistDisplay(a:jobinfo.file_mode)
     call neomake#EchoCurrentError()
