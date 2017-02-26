@@ -48,7 +48,7 @@ Execute (Neomake uses temporary file for unsaved buffer):
 Execute (Uses temporary file for unreadable buffer):
   new
   set ft=neomake_tests
-  let g:neomake_neomake_tests_enabled_makers = ['true']
+  let b:neomake_neomake_tests_enabled_makers = ['true']
   file doesnotexist
 
   let fname = fnamemodify(bufname('%'), ':p')
