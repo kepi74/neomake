@@ -11,3 +11,7 @@ endfunction
 function! neomake#makers#ft#neomake_tests#maker_without_exe() abort
   return {}
 endfunction
+
+function! neomake#makers#ft#neomake_tests#true() abort
+  return {}
+endfunction
