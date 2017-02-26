@@ -1,0 +1,46 @@
+Include: include/setup.vader
+
+Execute (Neomake uses temporary file for unsaved buffer):
+  new
+  norm iline1
+  norm oline2
+
+  let maker = {
+  \ 'exe': 'cat',
+  \ 'append_file': 1,
+  \ 'errorformat': '%m',
+  \ }
+  call neomake#Make(1, [maker])
+  let jobinfo = neomake#GetJobs()[0]
+
+  let temp_file = jobinfo.maker.temp_file
+  AssertEqual fnamemodify(temp_file, ':h:h'), fnamemodify(tempname(), ':h')
+  AssertEqual getfperm(temp_file), 'rw-r--r--'
+  NeomakeTestsWaitForFinishedJobs
+
+  AssertEqual getloclist(0), [{
+  \ 'lnum': 0,
+  \ 'bufnr': bufnr('%'),
+  \ 'col': 0,
+  \ 'valid': 1,
+  \ 'vcol': 0,
+  \ 'nr': -1,
+  \ 'type': '',
+  \ 'pattern': '',
+  \ 'text': 'line1'},
+  \ {
+  \ 'lnum': 0,
+  \ 'bufnr': bufnr('%'),
+  \ 'col': 0,
+  \ 'valid': 1,
+  \ 'vcol': 0,
+  \ 'nr': -1,
+  \ 'type': '',
+  \ 'pattern': '',
+  \ 'text': 'line2'}]
+
+  AssertEqual filereadable(temp_file), 0, 'temp_file was removed'
+
+  AssertNeomakeMessage 'Removing temporary file: '.temp_file
+
+  bwipe!
