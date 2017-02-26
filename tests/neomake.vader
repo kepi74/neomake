@@ -5,7 +5,6 @@
 ~ Features
 Include (Autolinting): autolint.vader
 Include (Completion): completion.vader
-Include (Error handling): errors.vader
 Include (Hooks): hooks.vader
 Include (Integration tests): integration.vader
 Include (Lists): lists.vader

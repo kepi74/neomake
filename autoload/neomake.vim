@@ -311,6 +311,10 @@ function! s:maker_base.get_argv(...) abort dict
             let temp_file = s:get_tempname(fnamemodify(bufname, ':t'))
             call neomake#utils#DebugMessage(printf(
                         \ 'Using tempfile for modified buffer %s: %s', bufnr, temp_file))
+        elseif !filereadable(bufname)
+            let temp_file = s:get_tempname(fnamemodify(bufname, ':t'))
+            call neomake#utils#DebugMessage(printf(
+                        \ 'Using tempfile for unreadable buffer %s: %s', bufnr, temp_file))
         endif
 
         if exists('temp_file')
@@ -320,11 +324,6 @@ function! s:maker_base.get_argv(...) abort dict
 
             let self.temp_file = temp_file
             let bufname = temp_file
-        else
-            let bufname = fnamemodify(bufname, ':p')
-            if !filereadable(bufname)
-                throw 'Neomake: file is not readable ('.bufname.')'
-            endif
         endif
         if args_is_list
             call add(args, bufname)
