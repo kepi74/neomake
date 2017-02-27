@@ -72,5 +72,6 @@ script:
       if [[ "$ENV" = "testvim" ]]; then
         vim --version
       fi
+      umask 022
       make $ENV $MAKE_ARGS
     fi

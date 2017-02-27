@@ -839,7 +839,11 @@ function! s:CleanJobinfo(jobinfo) abort
         call neomake#utils#DebugMessage(printf('Removing temporary file: %s',
                     \ a:jobinfo.maker.temp_file))
         call delete(a:jobinfo.maker.temp_file)
-        call delete(fnamemodify(a:jobinfo.maker.temp_file, ':h'), 'd')
+        " XXX: old Vim has no support for flags.. the patch version is not
+        " exact here!
+        if v:version >= 705 || (v:version == 704 && has('patch1689'))
+            call delete(fnamemodify(a:jobinfo.maker.temp_file, ':h'), 'd')
+        endif
     endif
 
     call neomake#utils#hook('NeomakeJobFinished', {'jobinfo': a:jobinfo})
