@@ -11,12 +11,14 @@ Execute (Neomake uses temporary file for unsaved buffer):
   \ 'errorformat': '%m',
   \ }
   call neomake#Make(1, [maker])
-  let jobinfo = neomake#GetJobs()[0]
+  if neomake#has_async_support()
+    let jobinfo = neomake#GetJobs()[0]
 
-  let temp_file = jobinfo.maker.temp_file
-  AssertEqual fnamemodify(temp_file, ':h:h'), fnamemodify(tempname(), ':h')
-  AssertEqual getfperm(temp_file), 'rw-r--r--'
-  NeomakeTestsWaitForFinishedJobs
+    let temp_file = jobinfo.maker.temp_file
+    AssertEqual fnamemodify(temp_file, ':h:h'), fnamemodify(tempname(), ':h')
+    AssertEqual getfperm(temp_file), 'rw-r--r--'
+    NeomakeTestsWaitForFinishedJobs
+  endif
 
   AssertEqual getloclist(0), [{
   \ 'lnum': 0,
@@ -39,9 +41,12 @@ Execute (Neomake uses temporary file for unsaved buffer):
   \ 'pattern': '',
   \ 'text': 'line2'}]
 
-  AssertEqual filereadable(temp_file), 0, 'temp_file was removed'
-
-  AssertNeomakeMessage 'Removing temporary file: '.temp_file
+  if neomake#has_async_support()
+    AssertEqual filereadable(temp_file), 0, 'temp_file was removed'
+    AssertNeomakeMessage 'Removing temporary file: '.temp_file
+  else
+    AssertEqual len(filter(copy(g:neomake_test_messages), "v:val[1] =~# '^Removing temporary file:'")), 1, 'msg found'
+  endif
 
   bwipe!
 
